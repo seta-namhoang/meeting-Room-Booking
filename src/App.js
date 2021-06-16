@@ -22,45 +22,62 @@ import {
   DateNavigator,
   TodayButton,
   Resources,
+  GroupingPanel,
   DragDropProvider,
 } from "@devexpress/dx-react-scheduler-material-ui";
 
-import { appointments } from "./appoinments";
-import { indigo, teal } from "@material-ui/core/colors";
+import { appointments } from "./appointment_data/appoinments";
+import { blue, red, teal } from "@material-ui/core/colors";
 
 export default function App() {
   let today = new Date();
   const [currentDate, setCurrentDate] = React.useState(
-    today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate()
+    today.getFullYear() + "/" + (today.getMonth() + 1) + "/" + today.getDate()
   );
 
   const owners = [
     {
       text: "Nam",
       id: 1,
-      color: indigo,
     },
     {
       text: "Laura",
       id: 2,
-      color: teal,
     },
   ];
-  const locations = [
+  const resources = [
     {
-      text: "Room I",
-      id: 1,
+      fieldName: "roomId",
+      title: "Location",
+      instances: [
+        {
+          text: "Room I",
+          id: 1,
+          color: blue,
+        },
+        {
+          text: "Room II",
+          id: 2,
+          color: teal,
+        },
+        {
+          text: "Room III",
+          id: 3,
+          color: red,
+        },
+      ],
     },
     {
-      text: "Room II",
-      id: 2,
-    },
-    {
-      text: "Room III",
-      id: 3,
+      fieldName: "members",
+      title: "Member(s)",
+      instances: owners,
     },
   ];
-
+  const grouping = [
+    {
+      resourceName: "roomId",
+    },
+  ];
   const [appointmentData, setAppointments] = React.useState(appointments);
   const commitChanges = ({ added, changed, deleted }) => {
     let data = [...appointmentData];
@@ -79,31 +96,15 @@ export default function App() {
     if (deleted !== undefined) {
       data = data.filter((appointment) => appointment.id !== deleted);
     }
+    console.log("render crud appointment");
     setAppointments(data);
   };
 
-  const resources = [
-    {
-      fieldName: "members",
-      title: "Members",
-      instances: owners,
-      allowMultiple: true,
-    },
-    {
-      fieldName: "roomId",
-      title: "Location",
-      instances: locations,
-    },
-  ];
-  const grouping = [
-    {
-      resourceName: "roomId",
-    },
-  ];
   let currentDateChange = (currentDate) => {
     setCurrentDate(currentDate);
+    console.log("render lai trang");
   };
-  console.log(appointmentData);
+
   return (
     <>
       <Paper>
@@ -115,8 +116,7 @@ export default function App() {
           />
           <EditingState onCommitChanges={commitChanges} />
           <GroupingState grouping={grouping} />
-          <IntegratedEditing />
-          <ConfirmationDialog />
+
           <WeekView excludedDays={[0, 6]} startDayHour={8} endDayHour={19} />
           <DayView startDayHour={8} endDayHour={19} />
           <MonthView />
@@ -127,8 +127,11 @@ export default function App() {
           <Appointments />
           <Resources data={resources} mainResourceName="roomId" />
           <IntegratedGrouping />
+          <IntegratedEditing />
+          <ConfirmationDialog />
           <AppointmentTooltip showOpenButton showDeleteButton />
           <AppointmentForm />
+          <GroupingPanel />
           <DragDropProvider />
           <CurrentTimeIndicator />
         </Scheduler>
