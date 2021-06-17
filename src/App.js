@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Paper from "@material-ui/core/Paper";
 import {
   ViewState,
@@ -26,12 +26,11 @@ import {
   DragDropProvider,
 } from "@devexpress/dx-react-scheduler-material-ui";
 
-import { appointments } from "./appointment_data/appoinments";
 import { blue, red, teal } from "@material-ui/core/colors";
 
 export default function App() {
   let today = new Date();
-  const [currentDate, setCurrentDate] = React.useState(
+  const [currentDate, setCurrentDate] = useState(
     today.getFullYear() + "/" + (today.getMonth() + 1) + "/" + today.getDate()
   );
 
@@ -78,33 +77,51 @@ export default function App() {
       resourceName: "roomId",
     },
   ];
-  const [appointmentData, setAppointments] = React.useState(appointments);
-  const commitChanges = ({ added, changed, deleted }) => {
-    let data = [...appointmentData];
-    if (added) {
-      const startingAddedId =
-        data.length > 0 ? data[data.length - 1].id + 1 : 0;
-      data = [...data, { id: startingAddedId, ...added }];
-    }
-    if (changed) {
-      data = data.map((appointment) =>
-        changed[appointment.id]
-          ? { ...appointment, ...changed[appointment.id] }
-          : appointment
-      );
-    }
-    if (deleted !== undefined) {
-      data = data.filter((appointment) => appointment.id !== deleted);
-    }
-    console.log("render crud appointment");
-    setAppointments(data);
-  };
 
-  let currentDateChange = (currentDate) => {
-    setCurrentDate(currentDate);
-    console.log("render lai trang");
-  };
+  const [appointmentData, setAppointments] = useState([]);
 
+  const commitChanges = useCallback(
+    ({ added, changed, deleted }) => {
+      if (added) {
+        const startingAddedId =
+          appointmentData.length > 0
+            ? appointmentData[appointmentData.length - 1].id + 1
+            : 0;
+        setAppointments([
+          ...appointmentData,
+          { id: startingAddedId, ...added },
+        ]);
+      }
+      if (changed) {
+        setAppointments(
+          appointmentData.map((appointment) =>
+            changed[appointment.id]
+              ? { ...appointment, ...changed[appointment.id] }
+              : appointment
+          )
+        );
+      }
+      if (deleted !== undefined) {
+        setAppointments(
+          appointmentData.filter((appointment) => appointment.id !== deleted)
+        );
+      }
+    },
+    [setAppointments, appointmentData]
+  );
+
+  useEffect(() => {
+    const apm = localStorage.getItem("appointments");
+    if (apm) {
+      setAppointments(JSON.parse(apm));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("appointments", JSON.stringify(appointmentData));
+  }, [appointmentData]);
+
+  let currentDateChange = (currentDate) => setCurrentDate(currentDate);
   return (
     <>
       <Paper>
